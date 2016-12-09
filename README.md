@@ -3,36 +3,34 @@
 docker-elasticsearch-alpine
 ===========================
 
-[![CircleCI](https://circleci.com/gh/blacktop/docker-elasticsearch-alpine.png?style=shield)](https://circleci.com/gh/blacktop/docker-elasticsearch-alpine) [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org) [![Docker Stars](https://img.shields.io/docker/stars/blacktop/elasticsearch.svg)](https://hub.docker.com/r/blacktop/elasticsearch/) [![Docker Pulls](https://img.shields.io/docker/pulls/blacktop/elasticsearch.svg)](https://hub.docker.com/r/blacktop/elasticsearch/) [![Docker Image](https://img.shields.io/badge/docker image-141.7 MB-blue.svg)](https://hub.docker.com/r/blacktop/elasticsearch/)
+[![CircleCI](https://circleci.com/gh/blacktop/docker-elasticsearch-alpine.png?style=shield)](https://circleci.com/gh/blacktop/docker-elasticsearch-alpine) [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org) [![Docker Stars](https://img.shields.io/docker/stars/blacktop/elasticsearch.svg)](https://hub.docker.com/r/blacktop/elasticsearch/) [![Docker Pulls](https://img.shields.io/docker/pulls/blacktop/elasticsearch.svg)](https://hub.docker.com/r/blacktop/elasticsearch/) [![Docker Image](https://img.shields.io/badge/docker image--blue.svg)](https://hub.docker.com/r/blacktop/elasticsearch/)
 
-Alpine Linux based Elasticsearch Docker Image
+Alpine Linux based [Elasticsearch](https://www.elastic.co/products/elasticsearch) Docker Image
 
 **Table of Contents**
 
-- [docker-elasticsearch-alpine](#docker-elasticsearch-alpine)
-    - [Why?](#why)
-    - [Dependencies](#dependencies)
-    - [Image Tags](#image-tags)
-    - [Getting Started](#getting-started)
-    - [Documentation](#documentation)
-        - [To increase the HEAP_MAX and HEAP_MIN to 2GB.](#to-increase-the-heap_max-and-heap_min-to-2gb)
-        - [To create an elasticsearch cluster](#to-create-an-elasticsearch-cluster)
-        - [To monitor the clusters metrics using dockerbeat:](#to-monitor-the-clusters-metrics-using-dockerbeat)
-    - [Known Issues](#known-issues)
-      - [5.0 failing to start](#50-failing-to-start)
-    - [Issues](#issues)
-    - [Credits](#credits)
-    - [CHANGELOG](#changelog)
-    - [Contributing](#contributing)
-    - [License](#license)
+-	[Why?](#why)
+-	[Dependencies](#dependencies)
+-	[Image Tags](#image-tags)
+-	[Getting Started](#getting-started)
+-	[Documentation](#documentation)
+	-	[To create an elasticsearch cluster](docs/create.md)
+	-	[To increase the HEAP_SIZE to 2GB](docs/options.md)  
+	-	[To monitor the clusters metrics using dockerbeat](docs/dockerbeat.md)
+	-	[To run in production](docs/production.md)
+-	[Issues](#issues)
+-	[Credits](#credits)
+-	[CHANGELOG](#changelog)
+-	[Contributing](#contributing)
+-	[License](#license)
 
 ### Why?
 
 Compare Image Sizes:  
- - official elasticsearch = 354.8 MB  
- - blacktop/elasticsearch = 141 MB
+ - official elasticsearch = 350 MB  
+ - blacktop/elasticsearch = 149 MB
 
-**Alpine version is 213 MB smaller !**
+**Alpine version is 201 MB smaller !**
 
 ### Dependencies
 
@@ -42,14 +40,20 @@ Compare Image Sizes:
 
 ```bash
 REPOSITORY               TAG                 SIZE
-blacktop/elasticsearch   latest              141.7 MB
-blacktop/elasticsearch   5.0                 145.7 MB
-blacktop/elasticsearch   2.4                 141.5 MB
-blacktop/elasticsearch   2.3                 141.7 MB
+blacktop/elasticsearch   latest              149.7 MB
+blacktop/elasticsearch   5.0                 149.7 MB
+blacktop/elasticsearch   geoip               182.7 MB
+blacktop/elasticsearch   x-pack              200.0 MB
+blacktop/elasticsearch   2.4                 140.1 MB
+blacktop/elasticsearch   kopf                147.5 MB
+blacktop/elasticsearch   2.3                 141.8 MB
 blacktop/elasticsearch   1.7                 145.4 MB
 ```
 
-> **NOTE:** tag **5.0** requires at least 2GB of RAM to run.
+> **NOTE:**
+ * tag **x-pack** is the same as tag **latest**, but includes the *x-pack*, the *ingest-geoip* and the *ingest-user-agent* plugin.  
+ * tag **geoip** is the same as tag **latest**, but includes the *ingest-geoip* and the *ingest-user-agent* plugin.  
+ * tag **kopf** is the same as tag **2.4**, but includes the *kopf* plugin.
 
 ### Getting Started
 
@@ -59,53 +63,18 @@ $ docker run -d --name elastic -p 9200:9200 blacktop/elasticsearch
 
 ### Documentation
 
-> **NOTE:** Example usage assumes you are using [Docker for Mac](https://docs.docker.com/docker-for-mac/)
+-	[To create an elasticsearch cluster](docs/create.md)
+-	[To increase the HEAP_SIZE to 2GB](docs/options.md)
+-	[To monitor the clusters metrics using dockerbeat](docs/dockerbeat.md)
+-	[To run in production](docs/production.md)
 
-##### To increase the HEAP_MAX and HEAP_MIN to 2GB.
+### Known Issues :warning:
 
-```bash
-$ docker run -d --name elastic -p 9200:9200 -e ES_JAVA_OPTS="-Xms2g -Xmx2g" blacktop/elasticsearch
-```
-
-##### To create an elasticsearch cluster
-
-```bash
-$ docker run -d --name elastic-master blacktop/elasticsearch master
-$ docker run -d --name elastic-client -p 9200:9200 --link elastic-master blacktop/elasticsearch client
-$ docker run -d --name elastic-data-1 --link elastic-master blacktop/elasticsearch data
-$ docker run -d --name elastic-data-2 --link elastic-master blacktop/elasticsearch data
-$ docker run -d --name elastic-data-3 --link elastic-master blacktop/elasticsearch data
-$ docker run -d --name kibana -p 5601:5601 --link elastic-client:elasticsearch kibana
-```
-
-Or you can use [docker-compose](https://docs.docker.com/compose/):
+I have noticed when running the new **5.0** version on a linux host you need to increase the memory map areas with the following command
 
 ```bash
-$ curl -sL https://raw.githubusercontent.com/blacktop/docker-elasticsearch-alpine/master/docker-compose.yml \
-  > docker-compose.yml
-$ docker-compose up -d
-$ docker-compose scale data=3
+sudo sysctl -w vm.max_map_count=262144
 ```
-
-Now you can:  
- - Navigate to: [http://localhost:5601](http://localhost:5601) for [Kibana](https://www.elastic.co/products/kibana)  
- - Navigate to: [http://localhost:9200/_plugin/kopf](http://localhost:9200/_plugin/kopf) for [kopf](https://github.com/lmenezes/elasticsearch-kopf)
-
-##### To monitor the clusters metrics using [dockerbeat](https://github.com/Ingensi/dockerbeat):
-
-```bash
-$ curl https://raw.githubusercontent.com/Ingensi/dockerbeat/develop/etc/dockerbeat.template.json \
-  | curl -H "Content-Type: application/json" -XPUT -d @- 'http://localhost:9200/_template/dockerbeat'
-$ docker run -d -v /var/run/docker.sock:/var/run/docker.sock --link elastic:elasticsearch ingensi/dockerbeat
-```
-
-### Known Issues
-
-#### 5.0 failing to start
-
-In order to use `blacktop/elasticsearch:5.0` you must also supply the environment variable: `ES_JAVA_OPTS="-Xms2g -Xmx2g"` for it to successfully start.  
-
-I am including it by default in the Dockerfile for now.
 
 ### Issues
 
@@ -113,7 +82,8 @@ Find a bug? Want more features? Find something missing in the documentation? Let
 
 ### Credits
 
-Heavily (if not entirely) influenced by https://github.com/docker-library/elasticsearch
+Heavily (if not entirely) influenced by https://github.com/docker-library/elasticsearch  
+Production docs from https://stefanprodan.com/2016/elasticsearch-cluster-with-docker/
 
 ### CHANGELOG
 

@@ -13,48 +13,48 @@ if [ "$1" = 'elasticsearch' -a "$(id -u)" = '0' ]; then
 	# Change the ownership of /usr/share/elasticsearch/data to elasticsearch
 	chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
 
-	set -- gosu elasticsearch tini -- "$@"
+	set -- gosu elasticsearch /sbin/tini -- "$@"
 	#exec gosu elasticsearch "$BASH_SOURCE" "$@"
 fi
 
 if [ "$1" = 'master' -a "$(id -u)" = '0' ]; then
 	# Change node into a master node
 	echo "node.master: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
-	echo "node.client: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+	echo "node.ingest: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
 	echo "node.data: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
 
 	# Change the ownership of /usr/share/elasticsearch/data to elasticsearch
 	chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
 
-	set -- gosu elasticsearch tini -- elasticsearch
+	set -- gosu elasticsearch /sbin/tini -- elasticsearch
 	#exec gosu elasticsearch "$BASH_SOURCE" "$@"
 fi
 
-if [ "$1" = 'client' -a "$(id -u)" = '0' ]; then
-	# Change node into a client node
+if [ "$1" = 'ingest' -a "$(id -u)" = '0' ]; then
+	# Change node into a ingest node
 	echo "node.master: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
-	echo "node.client: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
+	echo "node.ingest: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
 	echo "node.data: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
 	echo "discovery.zen.ping.unicast.hosts: [\"elastic-master\"]" >> /usr/share/elasticsearch/config/elasticsearch.yml
 
 	# Change the ownership of /usr/share/elasticsearch/data to elasticsearch
 	chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
 
-	set -- gosu elasticsearch tini -- elasticsearch
+	set -- gosu elasticsearch /sbin/tini -- elasticsearch
 	#exec gosu elasticsearch "$BASH_SOURCE" "$@"
 fi
 
 if [ "$1" = 'data' -a "$(id -u)" = '0' ]; then
 	# Change node into a data node
 	echo "node.master: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
-	echo "node.client: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
+	echo "node.ingest: false" >> /usr/share/elasticsearch/config/elasticsearch.yml
 	echo "node.data: true" >> /usr/share/elasticsearch/config/elasticsearch.yml
 	echo "discovery.zen.ping.unicast.hosts: [\"elastic-master\"]" >> /usr/share/elasticsearch/config/elasticsearch.yml
 
 	# Change the ownership of /usr/share/elasticsearch/data to elasticsearch
 	chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/data
 
-	set -- gosu elasticsearch tini -- elasticsearch
+	set -- gosu elasticsearch /sbin/tini -- elasticsearch
 	#exec gosu elasticsearch "$BASH_SOURCE" "$@"
 fi
 

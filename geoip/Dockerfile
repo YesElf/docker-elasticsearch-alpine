@@ -21,7 +21,7 @@ RUN apk-install -t build-deps wget ca-certificates gpgme \
   && gosu nobody true \
   && apk del --purge build-deps
 
-ENV ELASTIC 5.0.2
+ENV ELASTIC 5.1.1
 
 RUN apk-install bash
 RUN apk-install -t build-deps wget ca-certificates \
@@ -52,6 +52,10 @@ COPY docker-healthcheck /usr/local/bin/
 WORKDIR /usr/share/elasticsearch
 
 ENV PATH /usr/share/elasticsearch/bin:$PATH
+
+# Install geoip/user-agent plugin
+RUN elasticsearch-plugin install -b ingest-geoip
+RUN elasticsearch-plugin install -b ingest-user-agent
 
 VOLUME ["/usr/share/elasticsearch/data"]
 
